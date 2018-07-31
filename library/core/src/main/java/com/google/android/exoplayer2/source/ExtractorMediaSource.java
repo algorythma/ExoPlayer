@@ -42,7 +42,7 @@ import java.io.IOException;
  * <p>Note that the built-in extractors for AAC, MPEG PS/TS and FLV streams do not support seeking.
  */
 public final class ExtractorMediaSource extends BaseMediaSource
-    implements ExtractorMediaPeriod.Listener {
+    implements ExtractorMediaPeriodAudioFix.Listener {
   /**
    * Listener of {@link ExtractorMediaSource} events.
    *
@@ -356,7 +356,8 @@ public final class ExtractorMediaSource extends BaseMediaSource
   @Override
   public MediaPeriod createPeriod(MediaPeriodId id, Allocator allocator) {
     Assertions.checkArgument(id.periodIndex == 0);
-    return new ExtractorMediaPeriod(
+    return new ExtractorMediaPeriodAudioFix(
+//    return new ExtractorMediaPeriod(
         uri,
         dataSourceFactory.createDataSource(),
         extractorsFactory.createExtractors(),
@@ -370,7 +371,7 @@ public final class ExtractorMediaSource extends BaseMediaSource
 
   @Override
   public void releasePeriod(MediaPeriod mediaPeriod) {
-    ((ExtractorMediaPeriod) mediaPeriod).release();
+    ((ExtractorMediaPeriodAudioFix) mediaPeriod).release();
   }
 
   @Override
