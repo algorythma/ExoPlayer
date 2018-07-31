@@ -19,13 +19,14 @@ import android.net.Uri;
 import android.support.annotation.Nullable;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlayerLibraryInfo;
+import com.google.android.exoplayer2.upstream.CallbackListener;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DataSpec;
 import com.google.android.exoplayer2.upstream.TransferListener;
 import java.io.IOException;
 import net.butterflytv.rtmp_client.RtmpClient;
 import net.butterflytv.rtmp_client.RtmpClient.RtmpIOException;
-
+import net.butterflytv.rtmp_client.RTMPCallback;
 /**
  * A Real-Time Messaging Protocol (RTMP) {@link DataSource}.
  */
@@ -36,24 +37,37 @@ public final class RtmpDataSource implements DataSource {
   }
 
   @Nullable private final TransferListener<? super RtmpDataSource> listener;
+  @Nullable private final CallbackListener<? super RtmpDataSource> cbListener;
+  @Nullable private RtmpCallbackListener rtmpcbListener;
 
   private RtmpClient rtmpClient;
   private Uri uri;
 
   public RtmpDataSource() {
-    this(null);
+    this(null, null);
+  }
+
+  public RtmpDataSource (@Nullable CallbackListener<? super RtmpDataSource> cbListener) {
+    this (null, cbListener);
+  }
+
+  public RtmpDataSource(@Nullable TransferListener<? super RtmpDataSource> listener) {
+    this (listener, null);
   }
 
   /**
    * @param listener An optional listener.
    */
-  public RtmpDataSource(@Nullable TransferListener<? super RtmpDataSource> listener) {
+  public RtmpDataSource(@Nullable TransferListener<? super RtmpDataSource> listener,
+                        @Nullable CallbackListener<? super RtmpDataSource> cbListener) {
     this.listener = listener;
+    this.cbListener = cbListener;
   }
 
   @Override
   public long open(DataSpec dataSpec) throws RtmpIOException {
-    rtmpClient = new RtmpClient();
+    rtmpcbListener = new RtmpCallbackListener (this.cbListener, this);
+    rtmpClient = new RtmpClient(rtmpcbListener);
     rtmpClient.open(dataSpec.uri.toString(), false);
 
     this.uri = dataSpec.uri;

@@ -16,8 +16,10 @@
 package com.google.android.exoplayer2.ext.rtmp;
 
 import android.support.annotation.Nullable;
+import com.google.android.exoplayer2.upstream.CallbackListener;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.HttpDataSource.Factory;
+import net.butterflytv.rtmp_client.RTMPCallback;
 import com.google.android.exoplayer2.upstream.TransferListener;
 
 /**
@@ -27,21 +29,32 @@ public final class RtmpDataSourceFactory implements DataSource.Factory {
 
   @Nullable
   private final TransferListener<? super RtmpDataSource> listener;
+  private final CallbackListener<? super RtmpDataSource> cbListener;
 
   public RtmpDataSourceFactory() {
-    this(null);
+    this(null, null);
   }
 
   /**
    * @param listener An optional listener.
    */
   public RtmpDataSourceFactory(@Nullable TransferListener<? super RtmpDataSource> listener) {
+    this (listener, null);
+  }
+
+  public RtmpDataSourceFactory(@Nullable CallbackListener<? super RtmpDataSource> cbListener) {
+    this (null, cbListener);
+  }
+
+  public RtmpDataSourceFactory(@Nullable TransferListener<? super RtmpDataSource> listener,
+                               @Nullable CallbackListener<? super RtmpDataSource> cbListener) {
     this.listener = listener;
+    this.cbListener = cbListener;
   }
 
   @Override
   public DataSource createDataSource() {
-    return new RtmpDataSource(listener);
+    return new RtmpDataSource(listener, cbListener);
   }
 
 }
