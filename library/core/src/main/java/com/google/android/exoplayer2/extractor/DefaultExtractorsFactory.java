@@ -17,6 +17,7 @@ package com.google.android.exoplayer2.extractor;
 
 import com.google.android.exoplayer2.extractor.amr.AmrExtractor;
 import com.google.android.exoplayer2.extractor.flv.FlvExtractor;
+import com.google.android.exoplayer2.extractor.flv.FlvExtractorAudioFix;
 import com.google.android.exoplayer2.extractor.mkv.MatroskaExtractor;
 import com.google.android.exoplayer2.extractor.mp3.Mp3Extractor;
 import com.google.android.exoplayer2.extractor.mp4.FragmentedMp4Extractor;
@@ -169,7 +170,8 @@ public final class DefaultExtractorsFactory implements ExtractorsFactory {
     extractors[4] = new AdtsExtractor();
     extractors[5] = new Ac3Extractor();
     extractors[6] = new TsExtractor(tsMode, tsFlags);
-    extractors[7] = new FlvExtractor();
+    extractors[7] = new FlvExtractorAudioFix();
+//    extractors[7] = new FlvExtractor();
     extractors[8] = new OggExtractor();
     extractors[9] = new PsExtractor();
     extractors[10] = new WavExtractor();

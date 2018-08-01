@@ -50,7 +50,7 @@ import java.util.Arrays;
 /**
  * A {@link MediaPeriod} that extracts data using an {@link Extractor}.
  */
-/* package */ class ExtractorMediaPeriod implements MediaPeriod, ExtractorOutput,
+/* package */ final class ExtractorMediaPeriod implements MediaPeriod, ExtractorOutput,
     Loader.Callback<ExtractorMediaPeriod.ExtractingLoadable>, Loader.ReleaseCallback,
     UpstreamFormatChangedListener {
 
@@ -77,46 +77,46 @@ import java.util.Arrays;
 
   private final Uri uri;
   private final DataSource dataSource;
-  final int minLoadableRetryCount;
+  private final int minLoadableRetryCount;
   private final EventDispatcher eventDispatcher;
-  final Listener listener;
+  private final Listener listener;
   private final Allocator allocator;
   @Nullable private final String customCacheKey;
   private final long continueLoadingCheckIntervalBytes;
   private final Loader loader;
   private final ExtractorHolder extractorHolder;
-  final ConditionVariable loadCondition;
+  private final ConditionVariable loadCondition;
   private final Runnable maybeFinishPrepareRunnable;
   private final Runnable onContinueLoadingRequestedRunnable;
   private final Handler handler;
 
-  @Nullable Callback callback;
-  SeekMap seekMap;
-  SampleQueue[] sampleQueues;
+  private @Nullable Callback callback;
+  private SeekMap seekMap;
+  private SampleQueue[] sampleQueues;
   private int[] sampleQueueTrackIds;
-  boolean sampleQueuesBuilt;
-  boolean prepared;
-  int actualMinLoadableRetryCount;
+  private boolean sampleQueuesBuilt;
+  private boolean prepared;
+  private int actualMinLoadableRetryCount;
 
   private boolean seenFirstTrackSelection;
   private boolean notifyDiscontinuity;
   private boolean notifiedReadingStarted;
   private int enabledTrackCount;
-  TrackGroupArray tracks;
-  long durationUs;
-  boolean[] trackEnabledStates;
-  boolean[] trackIsAudioVideoFlags;
-  boolean[] trackFormatNotificationSent;
-  boolean haveAudioVideoTracks;
-  long length;
+  private TrackGroupArray tracks;
+  private long durationUs;
+  private boolean[] trackEnabledStates;
+  private boolean[] trackIsAudioVideoFlags;
+  private boolean[] trackFormatNotificationSent;
+  private boolean haveAudioVideoTracks;
+  private long length;
 
-  long lastSeekPositionUs;
-  long pendingResetPositionUs;
+  private long lastSeekPositionUs;
+  private long pendingResetPositionUs;
   private boolean pendingDeferredRetry;
 
   private int extractedSamplesCountAtStartOfLoad;
-  boolean loadingFinished;
-  boolean released;
+  private boolean loadingFinished;
+  private boolean released;
 
   /**
    * @param uri The {@link Uri} of the media stream.
@@ -600,7 +600,7 @@ import java.util.Arrays;
 
   // Internal methods.
 
-  public void maybeFinishPrepare() {
+  private void maybeFinishPrepare() {
     if (released || prepared || seekMap == null || !sampleQueuesBuilt) {
       return;
     }
@@ -718,7 +718,7 @@ import java.util.Arrays;
    * @param positionUs The seek position in microseconds.
    * @return Whether the in-buffer seek was successful.
    */
-  boolean seekInsideBufferUs(long positionUs) {
+  private boolean seekInsideBufferUs(long positionUs) {
     int trackCount = sampleQueues.length;
     for (int i = 0; i < trackCount; i++) {
       SampleQueue sampleQueue = sampleQueues[i];
@@ -744,7 +744,7 @@ import java.util.Arrays;
     return extractedSamplesCount;
   }
 
-  long getLargestQueuedTimestampUs() {
+  private long getLargestQueuedTimestampUs() {
     long largestQueuedTimestampUs = Long.MIN_VALUE;
     for (SampleQueue sampleQueue : sampleQueues) {
       largestQueuedTimestampUs = Math.max(largestQueuedTimestampUs,
@@ -753,7 +753,7 @@ import java.util.Arrays;
     return largestQueuedTimestampUs;
   }
 
-  boolean isPendingReset() {
+  private boolean isPendingReset() {
     return pendingResetPositionUs != C.TIME_UNSET;
   }
 
