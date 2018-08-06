@@ -27,4 +27,9 @@ project(modulePrefix + 'demo-cast').projectDir = new File(rootDir, 'demos/cast')
 project(modulePrefix + 'demo-ima').projectDir = new File(rootDir, 'demos/ima')
 project(modulePrefix + 'playbacktests').projectDir = new File(rootDir, 'playbacktests')
 
+include 'rtmp-client'
+project(':rtmp-client').projectDir = new File(rootDir, '../LibRtmp-Client-for-Android/rtmp-client')
+
+include 'library-core'
+project(':library-core').projectDir = new File (rootDir, 'library/core')
 apply from: 'core_settings.gradle'

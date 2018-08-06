@@ -17,8 +17,9 @@ buildscript {
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.0'
+        classpath 'com.android.tools.build:gradle:3.1.2'
         classpath 'com.novoda:bintray-release:0.8.1'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
     }
     // Workaround for the following test coverage issue. Remove when fixed:
     // https://code.google.com/p/android/issues/detail?id=226070
@@ -43,6 +44,10 @@ allprojects {
         }
         buildDir = "${externalBuildDir}/${project.name}"
     }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
 }
 
 apply from: 'javadoc_combined.gradle'
