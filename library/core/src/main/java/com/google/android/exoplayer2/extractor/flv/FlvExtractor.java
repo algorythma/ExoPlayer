@@ -16,6 +16,8 @@
 package com.google.android.exoplayer2.extractor.flv;
 
 import android.support.annotation.IntDef;
+import android.util.Log;
+
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.extractor.Extractor;
 import com.google.android.exoplayer2.extractor.ExtractorInput;
@@ -32,7 +34,7 @@ import java.lang.annotation.RetentionPolicy;
 /**
  * Extracts data from the FLV container format.
  */
-public final class FlvExtractor implements Extractor {
+public class FlvExtractor implements Extractor {
 
   /**
    * Factory for {@link FlvExtractor} instances.
@@ -41,7 +43,8 @@ public final class FlvExtractor implements Extractor {
 
     @Override
     public Extractor[] createExtractors() {
-      return new Extractor[] {new FlvExtractor()};
+//      return new Extractor[] {new FlvExtractor()};
+      return new Extractor[] {new FlvExtractorAudioFix()};
     }
 
   };
@@ -54,43 +57,45 @@ public final class FlvExtractor implements Extractor {
       STATE_READING_TAG_DATA})
   private @interface States {}
   private static final int STATE_READING_FLV_HEADER = 1;
-  private static final int STATE_SKIPPING_TO_TAG_HEADER = 2;
+  static final int STATE_SKIPPING_TO_TAG_HEADER = 2;
   private static final int STATE_READING_TAG_HEADER = 3;
   private static final int STATE_READING_TAG_DATA = 4;
 
   // Header sizes.
-  private static final int FLV_HEADER_SIZE = 9;
-  private static final int FLV_TAG_HEADER_SIZE = 11;
+  static final int FLV_HEADER_SIZE = 9;
+  static final int FLV_TAG_HEADER_SIZE = 11;
 
   // Tag types.
-  private static final int TAG_TYPE_AUDIO = 8;
-  private static final int TAG_TYPE_VIDEO = 9;
-  private static final int TAG_TYPE_SCRIPT_DATA = 18;
+  static final int TAG_TYPE_AUDIO = 8;
+  static final int TAG_TYPE_VIDEO = 9;
+  static final int TAG_TYPE_SCRIPT_DATA = 18;
 
   // FLV container identifier.
   private static final int FLV_TAG = Util.getIntegerCodeForString("FLV");
 
   private final ParsableByteArray scratch;
-  private final ParsableByteArray headerBuffer;
+  final ParsableByteArray headerBuffer;
+  final ParsableByteArray sniffBuffer;
   private final ParsableByteArray tagHeaderBuffer;
   private final ParsableByteArray tagData;
   private final ScriptTagPayloadReader metadataReader;
 
-  private ExtractorOutput extractorOutput;
-  private @States int state;
+  ExtractorOutput extractorOutput;
+  @States int state;
   private long mediaTagTimestampOffsetUs;
-  private int bytesToNextTagHeader;
+  int bytesToNextTagHeader;
   private int tagType;
   private int tagDataSize;
   private long tagTimestampUs;
   private boolean outputSeekMap;
-  private AudioTagPayloadReader audioReader;
-  private VideoTagPayloadReader videoReader;
+  AudioTagPayloadReader audioReader;
+  VideoTagPayloadReader videoReader;
 
   public FlvExtractor() {
     scratch = new ParsableByteArray(4);
     headerBuffer = new ParsableByteArray(FLV_HEADER_SIZE);
     tagHeaderBuffer = new ParsableByteArray(FLV_TAG_HEADER_SIZE);
+    sniffBuffer = new ParsableByteArray(FLV_HEADER_SIZE + FLV_TAG_HEADER_SIZE);
     tagData = new ParsableByteArray();
     metadataReader = new ScriptTagPayloadReader();
     state = STATE_READING_FLV_HEADER;
@@ -183,7 +188,7 @@ public final class FlvExtractor implements Extractor {
    * @throws IOException If an error occurred reading or parsing data from the source.
    * @throws InterruptedException If the thread was interrupted.
    */
-  private boolean readFlvHeader(ExtractorInput input) throws IOException, InterruptedException {
+  boolean readFlvHeader(ExtractorInput input) throws IOException, InterruptedException {
     if (!input.readFully(headerBuffer.data, 0, FLV_HEADER_SIZE, true)) {
       // We've reached the end of the stream.
       return false;
