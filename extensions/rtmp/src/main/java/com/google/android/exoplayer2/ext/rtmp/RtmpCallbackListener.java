@@ -3,8 +3,7 @@ package com.google.android.exoplayer2.ext.rtmp;
 import android.util.Log;
 
 import net.butterflytv.rtmp_client.RTMPCallback;
-
-import java.util.Arrays;
+import net.butterflytv.rtmp_client.RTMPMarker;
 
 public class RtmpCallbackListener implements RTMPCallback {
 
@@ -18,11 +17,10 @@ public class RtmpCallbackListener implements RTMPCallback {
     }
 
     @Override
-    public void dataCallback(byte[] buffer) {
+    public void dataCallback(RTMPMarker marker) {
         Log.i ("EXOPlayerRtmpCBListener", "invoked dataCallback");
         if (cbListener == null)
             return;
-        RTMPMarker marker = new RTMPMarker ("DefaultType", "DefaultUid", -1, buffer);
         cbListener.onData(ds, marker);
     }
 
