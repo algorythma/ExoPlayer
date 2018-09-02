@@ -55,4 +55,11 @@ public final class DummyDataSource implements DataSource {
     // do nothing.
   }
 
+  @Override
+  public void markerToastDisplay () { }
+
+  @Override
+  public int read(byte[] buffer, int offset, int readLength, boolean []isMarker) throws IOException { return 0;}
+
+
 }

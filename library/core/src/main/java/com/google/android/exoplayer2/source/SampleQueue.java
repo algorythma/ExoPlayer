@@ -28,7 +28,10 @@ import com.google.android.exoplayer2.upstream.Allocator;
 import com.google.android.exoplayer2.util.ParsableByteArray;
 import java.io.EOFException;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A queue of media samples.
@@ -52,7 +55,7 @@ public final class SampleQueue implements TrackOutput {
   public static final int ADVANCE_FAILED = -1;
 
   private static final int INITIAL_SCRATCH_SIZE = 32;
-
+  private ExtractorInput input;
   private final Allocator allocator;
   private final int allocationLength;
   private final SampleMetadataQueue metadataQueue;
@@ -72,6 +75,7 @@ public final class SampleQueue implements TrackOutput {
   private Format lastUnadjustedFormat;
   private long sampleOffsetUs;
   private long totalBytesWritten;
+  private List markerLocList;
   private boolean pendingSplice;
   private UpstreamFormatChangedListener upstreamFormatChangeListener;
 
@@ -87,6 +91,7 @@ public final class SampleQueue implements TrackOutput {
     firstAllocationNode = new AllocationNode(0, allocationLength);
     readAllocationNode = firstAllocationNode;
     writeAllocationNode = firstAllocationNode;
+    markerLocList = new ArrayList <Long> (30);
   }
 
   // Called by the consuming thread, but only when there is no loading thread.
@@ -435,6 +440,13 @@ public final class SampleQueue implements TrackOutput {
   private void readData(long absolutePosition, ByteBuffer target, int length) {
     advanceReadTo(absolutePosition);
     int remaining = length;
+    if (markerLocList.contains (absolutePosition)) {
+      try {
+        this.input.markerToastDisplay();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
     while (remaining > 0) {
       int toCopy = Math.min(remaining, (int) (readAllocationNode.endPosition - absolutePosition));
       Allocation allocation = readAllocationNode.allocation;
@@ -457,6 +469,15 @@ public final class SampleQueue implements TrackOutput {
   private void readData(long absolutePosition, byte[] target, int length) {
     advanceReadTo(absolutePosition);
     int remaining = length;
+
+    if (markerLocList.contains (absolutePosition)) {
+      try {
+        this.input.markerToastDisplay();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+
     while (remaining > 0) {
       int toCopy = Math.min(remaining, (int) (readAllocationNode.endPosition - absolutePosition));
       Allocation allocation = readAllocationNode.allocation;
@@ -562,6 +583,21 @@ public final class SampleQueue implements TrackOutput {
       int bytesAppended = preAppend(length);
       buffer.readBytes(writeAllocationNode.allocation.data,
           writeAllocationNode.translateOffset(totalBytesWritten), bytesAppended);
+      length -= bytesAppended;
+      postAppend(bytesAppended);
+    }
+  }
+
+  @Override
+  public void sampleData(ExtractorInput input, ParsableByteArray buffer, int length, boolean isMarker) {
+    while (length > 0) {
+      int bytesAppended = preAppend(length);
+      buffer.readBytes(writeAllocationNode.allocation.data,
+              writeAllocationNode.translateOffset(totalBytesWritten), bytesAppended);
+      this.input = input;
+      if (isMarker == true) {
+        markerLocList.add (totalBytesWritten);
+      }
       length -= bytesAppended;
       postAppend(bytesAppended);
     }

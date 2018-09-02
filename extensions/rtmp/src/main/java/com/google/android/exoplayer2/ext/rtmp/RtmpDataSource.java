@@ -89,6 +89,18 @@ public final class RtmpDataSource implements DataSource {
   }
 
   @Override
+  public int read(byte[] buffer, int offset, int readLength, boolean []isMarker) throws IOException {
+    int bytesRead = rtmpClient.read(buffer, offset, readLength, isMarker);
+    if (bytesRead == -1) {
+      return C.RESULT_END_OF_INPUT;
+    }
+    if (listener != null) {
+      listener.onBytesTransferred(this, bytesRead);
+    }
+    return bytesRead;
+  }
+
+  @Override
   public void close() {
     if (uri != null) {
       uri = null;
@@ -105,6 +117,11 @@ public final class RtmpDataSource implements DataSource {
   @Override
   public Uri getUri() {
     return uri;
+  }
+
+  @Override
+  public void markerToastDisplay () {
+    rtmpClient.markerToastDisplay();
   }
 
 }

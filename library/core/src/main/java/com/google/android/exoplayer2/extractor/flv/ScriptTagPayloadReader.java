@@ -17,6 +17,7 @@ package com.google.android.exoplayer2.extractor.flv;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ParserException;
+import com.google.android.exoplayer2.extractor.ExtractorInput;
 import com.google.android.exoplayer2.util.ParsableByteArray;
 import java.util.ArrayList;
 import java.util.Date;
@@ -64,6 +65,33 @@ import java.util.Map;
 
   @Override
   protected void parsePayload(ParsableByteArray data, long timeUs) throws ParserException {
+    int nameType = readAmfType(data);
+    if (nameType != AMF_TYPE_STRING) {
+      // Should never happen.
+      throw new ParserException();
+    }
+    String name = readAmfString(data);
+    if (!NAME_METADATA.equals(name)) {
+      // We're only interested in metadata.
+      return;
+    }
+    int type = readAmfType(data);
+    if (type != AMF_TYPE_ECMA_ARRAY) {
+      // We're not interested in this metadata.
+      return;
+    }
+    // Set the duration to the value contained in the metadata, if present.
+    Map<String, Object> metadata = readAmfEcmaArray(data);
+    if (metadata.containsKey(KEY_DURATION)) {
+      double durationSeconds = (double) metadata.get(KEY_DURATION);
+      if (durationSeconds > 0.0) {
+        durationUs = (long) (durationSeconds * C.MICROS_PER_SECOND);
+      }
+    }
+  }
+
+  @Override
+  protected void parsePayload(ExtractorInput input, ParsableByteArray data, long timeUs, boolean isMarker) throws ParserException {
     int nameType = readAmfType(data);
     if (nameType != AMF_TYPE_STRING) {
       // Should never happen.

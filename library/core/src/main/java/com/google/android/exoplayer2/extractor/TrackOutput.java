@@ -124,6 +124,14 @@ public interface TrackOutput {
   void sampleData(ParsableByteArray data, int length);
 
   /**
+   * Called to write sample data to the output.
+   *
+   * @param data A {@link ParsableByteArray} from which to read the sample data.
+   * @param length The number of bytes to read.
+   */
+  void sampleData(ExtractorInput input, ParsableByteArray data, int length, boolean isMarker);
+
+  /**
    * Called when metadata associated with a sample has been extracted from the stream.
    * <p>
    * The corresponding sample data will have already been passed to the output via calls to

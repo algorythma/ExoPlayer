@@ -335,6 +335,11 @@ public final class PlayerEmsgHandler implements Handler.Callback {
     }
 
     @Override
+    public void sampleData(ExtractorInput input, ParsableByteArray data, int length, boolean isMarker) {
+      sampleQueue.sampleData(data, length);
+    }
+
+    @Override
     public void sampleMetadata(
         long timeUs, int flags, int size, int offset, CryptoData encryptionData) {
       sampleQueue.sampleMetadata(timeUs, flags, size, offset, encryptionData);
