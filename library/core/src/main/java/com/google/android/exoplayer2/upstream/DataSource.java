@@ -71,6 +71,8 @@ public interface DataSource {
    * @throws IOException If an error occurs reading from the source.
    */
   int read(byte[] buffer, int offset, int readLength) throws IOException;
+  void markerToastDisplay ();
+  int read(byte[] buffer, int offset, int readLength, boolean [] isMarker) throws IOException;
 
   /**
    * When the source is open, returns the {@link Uri} from which data is being read. The returned

@@ -91,6 +91,8 @@ public class FlvExtractor implements Extractor {
   AudioTagPayloadReader audioReader;
   VideoTagPayloadReader videoReader;
 
+  boolean []isMarker = new boolean [1];
+
   public FlvExtractor() {
     scratch = new ParsableByteArray(4);
     headerBuffer = new ParsableByteArray(FLV_HEADER_SIZE);
@@ -237,7 +239,9 @@ public class FlvExtractor implements Extractor {
    * @throws InterruptedException If the thread was interrupted.
    */
   private boolean readTagHeader(ExtractorInput input) throws IOException, InterruptedException {
-    if (!input.readFully(tagHeaderBuffer.data, 0, FLV_TAG_HEADER_SIZE, true)) {
+
+    isMarker[0] = false;
+    if (!input.readFully(tagHeaderBuffer.data, 0, FLV_TAG_HEADER_SIZE, true, isMarker)) {
       // We've reached the end of the stream.
       return false;
     }
@@ -264,10 +268,24 @@ public class FlvExtractor implements Extractor {
     boolean wasConsumed = true;
     if (tagType == TAG_TYPE_AUDIO && audioReader != null) {
       ensureReadyForMediaOutput();
-      audioReader.consume(prepareTagData(input), mediaTagTimestampOffsetUs + tagTimestampUs);
+      audioReader.consume(input, prepareTagData(input), mediaTagTimestampOffsetUs + tagTimestampUs,
+              isMarker[0]);
+      isMarker[0] = false;
+//      if (isMarker[0] == true) {
+//        Log.i ("readTagData:", "tagType: AUDIO, invoking toast marker");
+//        input.markerToastDisplay();
+//        isMarker[0] = false;
+//      }
     } else if (tagType == TAG_TYPE_VIDEO && videoReader != null) {
       ensureReadyForMediaOutput();
-      videoReader.consume(prepareTagData(input), mediaTagTimestampOffsetUs + tagTimestampUs);
+      videoReader.consume(input, prepareTagData(input), mediaTagTimestampOffsetUs + tagTimestampUs,
+              isMarker[0]);
+      isMarker[0] = false;
+//      if (isMarker[0] == true) {
+//        Log.i ("readTagData:", "tagType: VIDEO, invoking toast marker");
+//        isMarker[0] = false;
+//        input.markerToastDisplay();
+//      }
     } else if (tagType == TAG_TYPE_SCRIPT_DATA && !outputSeekMap) {
       metadataReader.consume(prepareTagData(input), tagTimestampUs);
       long durationUs = metadataReader.getDurationUs();

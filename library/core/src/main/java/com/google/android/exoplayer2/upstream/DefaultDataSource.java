@@ -118,6 +118,11 @@ public final class DefaultDataSource implements DataSource {
     this.listener = listener;
     this.baseDataSource = Assertions.checkNotNull(baseDataSource);
   }
+  @Override
+  public void markerToastDisplay () { }
+
+  @Override
+  public int read(byte[] buffer, int offset, int readLength, boolean []isMarker) throws IOException { return 0;}
 
   @Override
   public long open(DataSpec dataSpec) throws IOException {

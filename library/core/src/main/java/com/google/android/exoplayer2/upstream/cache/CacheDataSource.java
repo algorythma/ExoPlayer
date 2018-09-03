@@ -304,6 +304,12 @@ public final class CacheDataSource implements DataSource {
     }
   }
 
+  @Override
+  public void markerToastDisplay () { }
+
+  @Override
+  public int read(byte[] buffer, int offset, int readLength, boolean []isMarker) throws IOException { return 0;}
+
   /**
    * Opens the next source. If the cache contains data spanning the current read position then
    * {@link #cacheReadDataSource} is opened to read from it. Else {@link #upstreamDataSource} is

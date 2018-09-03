@@ -33,6 +33,7 @@ allprojects {
     repositories {
         jcenter()
         google()
+        maven { url 'https://jitpack.io' }
     }
     project.ext {
         exoplayerPublishEnabled = true

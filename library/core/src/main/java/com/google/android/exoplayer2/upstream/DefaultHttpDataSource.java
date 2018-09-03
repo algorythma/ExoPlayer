@@ -156,6 +156,12 @@ public class DefaultHttpDataSource implements HttpDataSource {
   }
 
   @Override
+  public void markerToastDisplay () { }
+
+  @Override
+  public int read(byte[] buffer, int offset, int readLength, boolean []isMarker) throws IOException { return 0;}
+
+  @Override
   public Uri getUri() {
     return connection == null ? null : Uri.parse(connection.getURL().toString());
   }

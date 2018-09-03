@@ -82,6 +82,28 @@ public final class DefaultExtractorInput implements ExtractorInput {
   }
 
   @Override
+  public boolean readFully(byte[] target, int offset, int length, boolean allowEndOfInput, boolean []isMarker)
+          throws IOException, InterruptedException {
+    int bytesRead = readFromPeekBuffer(target, offset, length);
+    while (bytesRead < length && bytesRead != C.RESULT_END_OF_INPUT) {
+      bytesRead = readFromDataSource(target, offset, length, bytesRead, allowEndOfInput, isMarker);
+    }
+    commitBytesRead(bytesRead);
+    return bytesRead != C.RESULT_END_OF_INPUT;
+  }
+
+  @Override
+  public void readFully(byte[] target, int offset, int length, boolean []isMarker)
+          throws IOException, InterruptedException {
+    readFully(target, offset, length, false, isMarker);
+  }
+
+  @Override
+  public void markerToastDisplay () {
+    dataSource.markerToastDisplay();
+  }
+
+  @Override
   public int skip(int length) throws IOException, InterruptedException {
     int bytesSkipped = skipFromPeekBuffer(length);
     if (bytesSkipped == 0) {
@@ -258,6 +280,21 @@ public final class DefaultExtractorInput implements ExtractorInput {
       throw new InterruptedException();
     }
     int bytesRead = dataSource.read(target, offset + bytesAlreadyRead, length - bytesAlreadyRead);
+    if (bytesRead == C.RESULT_END_OF_INPUT) {
+      if (bytesAlreadyRead == 0 && allowEndOfInput) {
+        return C.RESULT_END_OF_INPUT;
+      }
+      throw new EOFException();
+    }
+    return bytesAlreadyRead + bytesRead;
+  }
+
+  private int readFromDataSource(byte[] target, int offset, int length, int bytesAlreadyRead,
+                                 boolean allowEndOfInput, boolean [] isMarker) throws InterruptedException, IOException {
+    if (Thread.interrupted()) {
+      throw new InterruptedException();
+    }
+    int bytesRead = dataSource.read(target, offset + bytesAlreadyRead, length - bytesAlreadyRead, isMarker);
     if (bytesRead == C.RESULT_END_OF_INPUT) {
       if (bytesAlreadyRead == 0 && allowEndOfInput) {
         return C.RESULT_END_OF_INPUT;

@@ -90,6 +90,13 @@ public final class FakeTrackOutput implements TrackOutput, Dumper.Dumpable {
   }
 
   @Override
+  public void sampleData(ParsableByteArray data, int length, boolean isMarker) {
+    byte[] newData = new byte[length];
+    data.readBytes(newData, 0, length);
+    sampleData = TestUtil.joinByteArrays(sampleData, newData);
+  }
+
+  @Override
   public void sampleMetadata(long timeUs, @C.BufferFlags int flags, int size, int offset,
       CryptoData cryptoData) {
     sampleTimesUs.add(timeUs);

@@ -66,6 +66,9 @@ public interface ExtractorInput {
   boolean readFully(byte[] target, int offset, int length, boolean allowEndOfInput)
       throws IOException, InterruptedException;
 
+  boolean readFully(byte[] target, int offset, int length, boolean allowEndOfInput, boolean[]isMakrer)
+          throws IOException, InterruptedException;
+
   /**
    * Equivalent to {@code readFully(target, offset, length, false)}.
    *
@@ -77,6 +80,9 @@ public interface ExtractorInput {
    * @throws InterruptedException If the thread is interrupted.
    */
   void readFully(byte[] target, int offset, int length) throws IOException, InterruptedException;
+  void readFully(byte[] target, int offset, int length, boolean[] isMarker) throws IOException, InterruptedException;
+
+  void markerToastDisplay () throws IOException;
 
   /**
    * Like {@link #read(byte[], int, int)}, except the data is skipped instead of read.

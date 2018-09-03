@@ -36,24 +36,37 @@ public final class RtmpDataSource implements DataSource {
   }
 
   @Nullable private final TransferListener<? super RtmpDataSource> listener;
+  @Nullable private final RTMPListener<? super RtmpDataSource> cbListener;
+  @Nullable private RtmpCallbackListener rtmpcbListener;
 
   private RtmpClient rtmpClient;
   private Uri uri;
 
   public RtmpDataSource() {
-    this(null);
+    this(null, null);
+  }
+
+  public RtmpDataSource (@Nullable RTMPListener<? super RtmpDataSource> cbListener) {
+    this (null, cbListener);
+  }
+
+  public RtmpDataSource(@Nullable TransferListener<? super RtmpDataSource> listener) {
+    this (listener, null);
   }
 
   /**
    * @param listener An optional listener.
    */
-  public RtmpDataSource(@Nullable TransferListener<? super RtmpDataSource> listener) {
+  public RtmpDataSource(@Nullable TransferListener<? super RtmpDataSource> listener,
+                        @Nullable RTMPListener<? super RtmpDataSource> cbListener) {
     this.listener = listener;
+    this.cbListener = cbListener;
   }
 
   @Override
   public long open(DataSpec dataSpec) throws RtmpIOException {
-    rtmpClient = new RtmpClient();
+    rtmpcbListener = new RtmpCallbackListener (this.cbListener, this);
+    rtmpClient = new RtmpClient(rtmpcbListener);
     rtmpClient.open(dataSpec.uri.toString(), false);
 
     this.uri = dataSpec.uri;
@@ -66,6 +79,18 @@ public final class RtmpDataSource implements DataSource {
   @Override
   public int read(byte[] buffer, int offset, int readLength) throws IOException {
     int bytesRead = rtmpClient.read(buffer, offset, readLength);
+    if (bytesRead == -1) {
+      return C.RESULT_END_OF_INPUT;
+    }
+    if (listener != null) {
+      listener.onBytesTransferred(this, bytesRead);
+    }
+    return bytesRead;
+  }
+
+  @Override
+  public int read(byte[] buffer, int offset, int readLength, boolean []isMarker) throws IOException {
+    int bytesRead = rtmpClient.read(buffer, offset, readLength, isMarker);
     if (bytesRead == -1) {
       return C.RESULT_END_OF_INPUT;
     }
@@ -92,6 +117,11 @@ public final class RtmpDataSource implements DataSource {
   @Override
   public Uri getUri() {
     return uri;
+  }
+
+  @Override
+  public void markerToastDisplay () {
+    rtmpClient.markerToastDisplay();
   }
 
 }

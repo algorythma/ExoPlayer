@@ -197,6 +197,11 @@ public final class ChunkExtractorWrapper implements ExtractorOutput {
     }
 
     @Override
+    public void sampleData(ExtractorInput input, ParsableByteArray data, int length, boolean isMarker) {
+      trackOutput.sampleData(data, length);
+    }
+
+    @Override
     public void sampleMetadata(long timeUs, @C.BufferFlags int flags, int size, int offset,
         CryptoData cryptoData) {
       trackOutput.sampleMetadata(timeUs, flags, size, offset, cryptoData);

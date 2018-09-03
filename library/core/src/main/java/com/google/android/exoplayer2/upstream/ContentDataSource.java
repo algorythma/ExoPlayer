@@ -68,6 +68,12 @@ public final class ContentDataSource implements DataSource {
   }
 
   @Override
+  public void markerToastDisplay () { }
+
+  @Override
+  public int read(byte[] buffer, int offset, int readLength, boolean []isMarker) throws IOException { return 0;}
+
+  @Override
   public long open(DataSpec dataSpec) throws ContentDataSourceException {
     try {
       uri = dataSpec.uri;

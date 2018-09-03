@@ -16,6 +16,7 @@
 package com.google.android.exoplayer2.extractor.flv;
 
 import com.google.android.exoplayer2.ParserException;
+import com.google.android.exoplayer2.extractor.ExtractorInput;
 import com.google.android.exoplayer2.extractor.TrackOutput;
 import com.google.android.exoplayer2.util.ParsableByteArray;
 
@@ -65,6 +66,18 @@ import com.google.android.exoplayer2.util.ParsableByteArray;
       parsePayload(data, timeUs);
     }
   }
+  /**
+   * Consumes payload data.
+   *
+   * @param data The payload data to consume.
+   * @param timeUs The timestamp associated with the payload.
+   * @throws ParserException If an error occurs parsing the data.
+   */
+  public final void consume(ExtractorInput input, ParsableByteArray data, long timeUs, boolean isMarker) throws ParserException {
+    if (parseHeader(data)) {
+      parsePayload(input, data, timeUs, isMarker);
+    }
+  }
 
   /**
    * Parses tag header.
@@ -83,5 +96,14 @@ import com.google.android.exoplayer2.util.ParsableByteArray;
    * @throws ParserException If an error occurs parsing the payload.
    */
   protected abstract void parsePayload(ParsableByteArray data, long timeUs) throws ParserException;
+
+  /**
+   * Parses tag payload.
+   *
+   * @param data Buffer where tag payload is stored
+   * @param timeUs Time position of the frame
+   * @throws ParserException If an error occurs parsing the payload.
+   */
+  protected abstract void parsePayload(ExtractorInput input, ParsableByteArray data, long timeUs, boolean isMarker) throws ParserException;
 
 }

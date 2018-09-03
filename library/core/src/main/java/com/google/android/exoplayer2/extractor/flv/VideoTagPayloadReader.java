@@ -18,6 +18,7 @@ package com.google.android.exoplayer2.extractor.flv;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.ParserException;
+import com.google.android.exoplayer2.extractor.ExtractorInput;
 import com.google.android.exoplayer2.extractor.TrackOutput;
 import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.NalUnitUtil;
@@ -128,4 +129,57 @@ import com.google.android.exoplayer2.video.AvcConfig;
     }
   }
 
+  @Override
+  protected void parsePayload(ExtractorInput input, ParsableByteArray data, long timeUs, boolean isMarker) throws ParserException {
+    int packetType = data.readUnsignedByte();
+    int compositionTimeMs = data.readInt24();
+
+    timeUs += compositionTimeMs * 1000L;
+    // Parse avc sequence header in case this was not done before.
+    if (packetType == AVC_PACKET_TYPE_SEQUENCE_HEADER && !hasOutputFormat) {
+      ParsableByteArray videoSequence = new ParsableByteArray(new byte[data.bytesLeft()]);
+      data.readBytes(videoSequence.data, 0, data.bytesLeft());
+      AvcConfig avcConfig = AvcConfig.parse(videoSequence);
+      nalUnitLengthFieldLength = avcConfig.nalUnitLengthFieldLength;
+      // Construct and output the format.
+      Format format = Format.createVideoSampleFormat(null, MimeTypes.VIDEO_H264, null,
+              Format.NO_VALUE, Format.NO_VALUE, avcConfig.width, avcConfig.height, Format.NO_VALUE,
+              avcConfig.initializationData, Format.NO_VALUE, avcConfig.pixelWidthAspectRatio, null);
+      output.format(format);
+      hasOutputFormat = true;
+    } else if (packetType == AVC_PACKET_TYPE_AVC_NALU && hasOutputFormat) {
+      // TODO: Deduplicate with Mp4Extractor.
+      // Zero the top three bytes of the array that we'll use to decode nal unit lengths, in case
+      // they're only 1 or 2 bytes long.
+      byte[] nalLengthData = nalLength.data;
+      nalLengthData[0] = 0;
+      nalLengthData[1] = 0;
+      nalLengthData[2] = 0;
+      int nalUnitLengthFieldLengthDiff = 4 - nalUnitLengthFieldLength;
+      // NAL units are length delimited, but the decoder requires start code delimited units.
+      // Loop until we've written the sample to the track output, replacing length delimiters with
+      // start codes as we encounter them.
+      int bytesWritten = 0;
+      int bytesToWrite;
+      while (data.bytesLeft() > 0) {
+        // Read the NAL length so that we know where we find the next one.
+        data.readBytes(nalLength.data, nalUnitLengthFieldLengthDiff, nalUnitLengthFieldLength);
+        nalLength.setPosition(0);
+        bytesToWrite = nalLength.readUnsignedIntToInt();
+
+        // Write a start code for the current NAL unit.
+        nalStartCode.setPosition(0);
+        output.sampleData(nalStartCode, 4);
+        bytesWritten += 4;
+
+        // Write the payload of the NAL unit.
+        output.sampleData(input, data, bytesToWrite, isMarker);
+        if (isMarker)
+          isMarker = false;
+        bytesWritten += bytesToWrite;
+      }
+      output.sampleMetadata(timeUs, frameType == VIDEO_FRAME_KEYFRAME ? C.BUFFER_FLAG_KEY_FRAME : 0,
+              bytesWritten, 0, null);
+    }
+  }
 }

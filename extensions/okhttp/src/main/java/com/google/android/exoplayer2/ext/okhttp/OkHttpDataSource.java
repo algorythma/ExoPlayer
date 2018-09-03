@@ -220,6 +220,19 @@ public class OkHttpDataSource implements HttpDataSource {
   }
 
   @Override
+  public int read (byte[] buffer, int offset, int readLength, boolean[] isMarker) throws HttpDataSourceException {
+    try {
+      skipInternal();
+      return readInternal(buffer, offset, readLength);
+    } catch (IOException e) {
+      throw new HttpDataSourceException(e, dataSpec, HttpDataSourceException.TYPE_READ);
+    }
+  }
+
+  @Override
+  public void markerToastDisplay () { }
+
+  @Override
   public void close() throws HttpDataSourceException {
     if (opened) {
       opened = false;
