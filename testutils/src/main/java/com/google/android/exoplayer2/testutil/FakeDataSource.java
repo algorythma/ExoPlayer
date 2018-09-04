@@ -143,6 +143,14 @@ public class FakeDataSource implements DataSource {
   }
 
   @Override
+  public final int read(byte[] buffer, int offset, int readLength, boolean [] isMarker) throws IOException {
+    return 0;
+  }
+
+  @Override
+  public void markerToastDisplay () {}
+
+  @Override
   public final int read(byte[] buffer, int offset, int readLength) throws IOException {
     Assertions.checkState(opened);
     while (true) {
