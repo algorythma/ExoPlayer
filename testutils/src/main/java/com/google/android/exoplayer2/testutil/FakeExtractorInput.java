@@ -91,6 +91,9 @@ public final class FakeExtractorInput implements ExtractorInput {
   }
 
   @Override
+  public void markerToastDisplay () {}
+
+  @Override
   public int read(byte[] target, int offset, int length) throws IOException {
     checkIOException(readPosition, failedReadPositions);
     length = getReadLength(length);
@@ -98,10 +101,18 @@ public final class FakeExtractorInput implements ExtractorInput {
   }
 
   @Override
+  public void readFully(byte[] target, int offset, int length, boolean[] isMarker) {}
+
+  @Override
   public boolean readFully(byte[] target, int offset, int length, boolean allowEndOfInput)
       throws IOException {
     checkIOException(readPosition, failedReadPositions);
     return readFullyInternal(target, offset, length, allowEndOfInput);
+  }
+
+  @Override
+  public boolean readFully(byte[] target, int offset, int length, boolean allowEndOfInput, boolean[] isMakrer) {
+    return false;
   }
 
   @Override

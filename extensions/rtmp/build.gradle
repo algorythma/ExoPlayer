@@ -25,8 +25,8 @@ android {
 }
 
 dependencies {
-//    implementation project(modulePrefix + 'library-core')
-    implementation project(':library-core')
+    implementation project(modulePrefix + 'library-core')
+//    implementation project(':library-core')
 //    implementation 'net.butterflytv.utils:rtmp-client:3.0.1'
 //    implementation project(':rtmp-client')
     implementation 'com.github.algorythma:LibRtmp-Client-for-Android:83e0b64918'
